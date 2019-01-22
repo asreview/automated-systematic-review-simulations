@@ -12,9 +12,10 @@ you can run the code on every HPC facility.
 
 Install the Automated Systematic Review project directly from the github page
 https://github.com/msdslab/automated-systematic-review. One can do this with
-pip and git.
+pip and git. Also install the additional dependencies 
 
 ``` bash
+pip install -r requirements.txt
 pip install git+git@github.com:msdslab/automated-systematic-review.git
 ```
 
