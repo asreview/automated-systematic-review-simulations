@@ -1,12 +1,12 @@
-# Automated Systematic Review Datasets
+# Automated Systematic Review - Simulation study
 
-This project contains the simulations study for the [Automated Systematic
-Review](https://github.com/msdslab/automated-systematic-review) project. This
-repository is used to simulate, aggregate and visualise the active learning
-process.
+This project contains the code of the simulation study for the [Automated
+Systematic Review](https://github.com/msdslab/automated-systematic-review)
+project. This repository is used to simulate, aggregate and visualise the
+active learning process.
 
 We make use of the SURFSara HPC infrastructure. But with some modifications, 
-you can run the code on every HPC facility.
+you can run the code on other HPC facility as well.
 
 ## Installation 
 
