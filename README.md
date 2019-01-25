@@ -16,7 +16,7 @@ pip and git. Also install the additional dependencies
 
 ``` bash
 pip install -r requirements.txt
-pip install git+git@github.com:msdslab/automated-systematic-review.git
+pip install git+https://github.com/msdslab/automated-systematic-review.git
 ```
 
 ## Data preparation
