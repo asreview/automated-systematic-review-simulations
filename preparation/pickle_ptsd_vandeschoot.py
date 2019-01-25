@@ -24,6 +24,7 @@ data_fp = os.path.join(
 data, labels = load_data(data_fp)
 
 # create features and labels
+print('Convert text to features with {} words'.format(args.words))
 X, word_index = text_to_features(data, num_words=args.words)
 y = to_categorical(labels) if labels.ndim == 1 else labels
 
