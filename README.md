@@ -10,6 +10,8 @@ you can run the code on other HPC facility as well.
 
 ## Installation 
 
+The Automated Systematic Review project requires Python 3.6+. 
+
 Install the Automated Systematic Review project directly from the github page
 https://github.com/msdslab/automated-systematic-review. One can do this with
 pip and git. Also install the additional dependencies 

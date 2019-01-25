@@ -24,7 +24,7 @@ data_fp = os.path.join(
 data, labels = load_data(data_fp)
 
 # create features and labels
-print('Convert text to features with {} words'.format(args.words))
+print(f"Convert text to features with {args.words} words")
 X, word_index = text_to_features(data, num_words=args.words)
 y = to_categorical(labels) if labels.ndim == 1 else labels
 
@@ -51,8 +51,7 @@ if not os.path.exists('pickle'):
     os.makedirs('pickle')
 
 pickle_fp = os.path.join(
-    'pickle',
-    'ptsd_vandeschoot_words_{}.pkl'.format(args.words)
+    'pickle', f'ptsd_vandeschoot_words_{args.words}.pkl'
 )
 with open(pickle_fp, 'wb') as f:
     pickle.dump((X, y, embedding_matrix), f)
