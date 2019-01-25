@@ -27,6 +27,24 @@ The preparation of the data and the embedding of the model takes quite some
 computational time. To prevent each node from doing the same computations for
 preparation, we store the prepared objects in Python pickle files.
 
+``` bash
+python preparation/pickle_wiki_vec.py 
+python preparation/pickle_ptsd_vandeschoot.py --words=10000
+python preparation/pickle_ptsd_vandeschoot.py --words=20000
+```
+
+This generates the following files:
+```
+pickle/
+├── ptsd_vandeschoot_words_10000.pkl
+├── ptsd_vandeschoot_words_20000.pkl
+└── word2vec_wiki_en.pkl
+
+0 directories, 3 files
+```
+
+The following code gives a outline of what the code looks like. 
+
 ``` python 
 
 # load dependencies

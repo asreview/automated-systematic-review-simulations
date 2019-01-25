@@ -5,6 +5,9 @@ backup/
 output/
 batch_files/
 
+# exclude pickle files
+pickle/*
+
 # exclude pretrained models
 data/pretrained_models/*
 !data/pretrained_models/.gitkeep
