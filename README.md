@@ -45,6 +45,11 @@ pickle/
 0 directories, 3 files
 ```
 
+By default, the raw data is stored in the pickle file as well (as a
+`pandas.DataFrame`). One can exclude the data by using the flag
+`--no-data`.
+
+
 The following code gives a outline of what the code looks like. 
 
 ``` python 
@@ -70,14 +75,14 @@ embedding_matrix = sample_embedding(embedding, words, word_index)
 
 # Write to pickle file.
 with open(PATH_TO_PICKLE, 'wb') as f:
-    pickle.dump((X, y, embedding_matrix), f)
+    pickle.dump((X, y, embedding_matrix, data), f)
 ```
 
 In a simulation study, you can quickly load the data stored in the pickle file. 
 
 ``` python
 with open(PATH_TO_PICKLE, 'rb') as f:
-    X, y, embedding_matrix = pickle.load(f)
+    X, y, embedding_matrix, data = pickle.load(f)
 ```
 
 ## Simulations
@@ -99,7 +104,7 @@ model = create_lstm_model(
     embedding_layer=embedding_matrix
 )
 
-reviewer = asr.Review(model)
+reviewer = asr.ReviewOracle(model)
 reviewer.oracle(X, y)
 
 # store the review training logs and other metadata

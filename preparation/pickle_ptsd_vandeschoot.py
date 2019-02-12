@@ -7,6 +7,7 @@ from keras.utils import to_categorical
 from asr.utils import load_data, text_to_features
 from asr.models.embedding import load_embedding, sample_embedding
 
+
 # parse arguments if available
 parser = argparse.ArgumentParser(description='File preparation')
 parser.add_argument(
@@ -15,8 +16,14 @@ parser.add_argument(
     type=int,
     help='The number of words.'
 )
+parser.add_argument(
+    '--no-data',
+    dest='data',
+    action='store_false',
+    help="Don't save the data to the pickle file."
+)
+parser.set_defaults(feature=True)
 args = parser.parse_args()
-
 
 # load data
 data_fp = os.path.join(
@@ -54,4 +61,10 @@ pickle_fp = os.path.join(
     'pickle', f'ptsd_vandeschoot_words_{args.words}.pkl'
 )
 with open(pickle_fp, 'wb') as f:
-    pickle.dump((X, y, embedding_matrix), f)
+
+    if args.data:
+        t = (X, y, embedding_matrix, data)
+    else:
+        t = (X, y, embedding_matrix)
+
+    pickle.dump(t, f)
