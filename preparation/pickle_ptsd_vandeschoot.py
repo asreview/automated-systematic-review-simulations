@@ -2,6 +2,7 @@ import os
 import pickle
 import argparse
 
+import pandas
 from keras.utils import to_categorical
 
 from asr.utils import load_data, text_to_features
@@ -28,11 +29,12 @@ args = parser.parse_args()
 # load data
 data_fp = os.path.join(
     'data', 'datasets', 'ptsd_vandeschoot', 'schoot-lgmm-ptsd.csv')
-data, labels = load_data(data_fp)
+data = pandas.read_csv(data_fp)
+texts, labels = load_data(data_fp)
 
 # create features and labels
 print(f"Convert text to features with {args.words} words")
-X, word_index = text_to_features(data, num_words=args.words)
+X, word_index = text_to_features(texts, num_words=args.words)
 y = to_categorical(labels) if labels.ndim == 1 else labels
 
 # Load embedding layer. If there is a pickled word2vec available, use this
