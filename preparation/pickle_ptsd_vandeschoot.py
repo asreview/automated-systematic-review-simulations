@@ -30,12 +30,11 @@ args = parser.parse_args()
 data_fp = os.path.join(
     'data', 'datasets', 'ptsd_vandeschoot', 'schoot-lgmm-ptsd.csv')
 data = pandas.read_csv(data_fp)
-texts, labels = load_data(data_fp)
+texts, y = load_data(data_fp)
 
 # create features and labels
 print(f"Convert text to features with {args.words} words")
 X, word_index = text_to_features(texts, num_words=args.words)
-y = to_categorical(labels) if labels.ndim == 1 else labels
 
 # Load embedding layer. If there is a pickled word2vec available, use this
 # pickle file instead of loading the raw data.
