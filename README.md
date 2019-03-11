@@ -21,6 +21,15 @@ pip install -r requirements.txt
 pip install git+https://github.com/msdslab/automated-systematic-review.git
 ```
 
+## Simulations 
+
+The simulations in this study are listed on this page:
+
+- [Simulation AL-LSTM ](/sub_analysis_AL_LSTM) - This is a simulation in
+  which we explore an Active Learning solution, using Long Short-Term Memory
+  (LSTM) model. 
+
+
 ## Data preparation
 
 See also: [preparation/](preparation/)
