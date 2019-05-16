@@ -5,6 +5,10 @@ backup/
 output/
 batch_files/
 
+# exclude PyDev/Eclipse files
+.pydevproject
+.project
+
 # exclude pickle files
 pickle/*
 
