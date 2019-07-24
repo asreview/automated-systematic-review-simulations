@@ -10,8 +10,9 @@ import sys
 
 import pandas
 
-from asr.utils import load_data, text_to_features
-from asr.models.embedding import load_embedding, sample_embedding
+from asreview import read_data
+from asreview import text_to_features
+from asreview import load_embedding, sample_embedding
 
 
 def pickle_dir(create=True):
@@ -70,13 +71,7 @@ def write_pickle(data_file, embedding_file, num_words=20000):
         print(f"Pickle file {pickle_fp} already exists, using that.")
         return pickle_fp
 
-#   Load data
-    try:
-        data = pandas.read_csv(data_file)
-    except UnicodeDecodeError:
-        data = pandas.read_csv(data_file, encoding="ISO-8859-1")
-
-    texts, y = load_data(data_file)
+    data, texts, y = read_data(data_file)
 
     # Create features and labels
     print(f"Convert text to features with {num_words} words")

@@ -4,8 +4,8 @@ if [ $# -lt 3 ]; then
     echo "Error: need three arguments. [Data file in] [embedding] [Vector file out]"
 fi
 
-CSV_FILE=$1
-EMBEDDING=$2
+CSV_FILE=$2
+EMBEDDING=$1
 CUSTOM_EMBEDDING=$3
 FDIR=./fastText-0.2.0
 TWORD_FILE=word_file.tmp

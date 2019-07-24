@@ -19,7 +19,7 @@ def _create_df_parameter_grid(var_param, n_sample=None):
     grid = ParameterGrid(var_param)
     grid = list(grid)
 
-    # Sample the parameter grid and throw the rest away.
+#   Sample the parameter grid and throw the rest away.
     if n_sample is not None:
         random.seed(9238752938)
         grid = random.sample(grid, n_sample)
@@ -55,7 +55,7 @@ def _args_from_row(row, param_names, data_file, output_dir):
                     param_names)
     param_val_all = " ".join(list(param_val))
     job_str = "'" + data_file + "'" + param_val_all
-    job_str += " --log_file " + "'" + output_dir + "/results" +\
+    job_str += " --log_file " + "\"${TMPDIR}\"/" + "'" + output_dir + "/results" +\
         str(getattr(row, "T")) + ".log" + "'"
     return job_str
 
@@ -71,7 +71,7 @@ def commands_from_csv(data_file, param_file, output_dir="output"):
        config_file: str
        """
     params = pd.read_csv(param_file)
-    base_job = "${python} -m asr simulate "
+    base_job = "${python} -m asreview simulate "
     param_names_all = list(params.columns.values)
     param_names = [p for p in param_names_all if p not in ['T', 'simulation']]
 
@@ -104,10 +104,8 @@ fi
 
 BASE_DIR=${cwd}
 cd $BASE_DIR
+source cpu-node/bin/activate
 mkdir -p "${TMPDIR}"/${output_dir}
-rm -rf "${TMPDIR}"/results.log
-cp -r $BASE_DIR/pickle "${TMPDIR}"
-cd "${TMPDIR}"
 """
     if config_file is not None:
         mydef_str += "cp $BASE_DIR/${config_file} ${TMPDIR}\n"

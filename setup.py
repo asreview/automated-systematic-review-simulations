@@ -46,7 +46,7 @@ setup(
 
     install_requires=[
         "pandas", "numpy", "sklearn", "keras", "matplotlib", "scipy",
-        "asr @ git+https://github.com/msdslab/automated-systematic-review",
+        "asreview",
         "batchgen @ git+https://github.com/UtrechtUniversity/hpc-batch-gen",
     ],
 

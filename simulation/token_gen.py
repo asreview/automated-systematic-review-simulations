@@ -7,14 +7,14 @@ Created on 23 Apr 2019
 
 import sys
 
-from asr.utils import load_data, text_to_features
+import asreview
 
 filename = sys.argv[1]
 file_out = sys.argv[2]
 
 print(filename)
-data, labels = load_data(filename)
-X, word_index = text_to_features(data)
+_, text, labels = asreview.read_data(filename)
+X, word_index = asreview.text_to_features(text)
 
 with open(file_out, "w") as f:
     for key in word_index:

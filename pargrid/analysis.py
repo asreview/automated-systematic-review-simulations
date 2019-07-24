@@ -281,6 +281,14 @@ def _inc_queried_merged(proba, labels):
     return [found_avg, found_err]
 
 
+def _inc_queried_all_merged(proba, labels):
+    """ Merged version of _inc_queried. """
+    found = []
+    for sub in proba:
+        found.append(_inc_queried(sub, labels))
+    return found
+
+
 def _avg_proba(proba, labels):
     """ Average of the prediction probabilities. """
     n = len(proba)
@@ -313,6 +321,7 @@ class Analysis(object):
         self._rores = {}  # Reordered results.
         self._n_queries = {}
         self._labels = {}
+        self._final_labels = {}
 
         # Get the results for all the directories.
         for full_dir in data_dirs:
@@ -324,8 +333,12 @@ class Analysis(object):
             self._n_queries[_dir] = get_num_queries(self._results[_dir])
             if 'labels' in list(self._results[_dir].values())[0]:
                 self._labels[_dir] = list(self._results[_dir].values())[0]['labels']
-            else:
-                self._labels[_dir] = read_labels("pickle/schoot-lgmm-ptsd_words_20000.pkl")
+            if 'final_labels' in list(self._results[_dir].values())[0]:
+                self._final_labels[_dir] = list(
+                    self._results[_dir].values())[0]['final_labels']
+
+        if len(self._final_labels) == 0:
+            self._final_labels = None
 
     def _avg_time_found(self, _dir):
         results = self._rores[_dir]['labelled']
@@ -385,7 +398,7 @@ class Analysis(object):
         plt.hist(time_hist, density=False)
         plt.show()
 
-    def stat_test_merged(self, _dir, logname, stat_fn, **kwargs):
+    def stat_test_merged(self, _dir, logname, stat_fn, final_labels=False, **kwargs):
         """
         Do a statistical test on the results.
 
@@ -408,7 +421,10 @@ class Analysis(object):
         stat_results = []
         results = self._rores[_dir][logname]
 #         print(self._results[_dir])
-        labels = self._labels[_dir]
+        if final_labels and self._final_labels is not None:
+            labels = self._final_labels[_dir]
+        else:
+            labels = self._labels[_dir]
         for query in results:
             new_res = stat_fn(results[query], labels, **kwargs)
             stat_results.append(new_res)
@@ -450,7 +466,31 @@ class Analysis(object):
         plt.title("Area Under Curve of ROC")
         plt.show()
 
-    def plot_inc_found(self):
+    def get_inc_found(self, _dir, *args, final_labels=False, **kwargs):
+        inc_found = self.stat_test_merged(_dir, *args, final_labels=final_labels, **kwargs)
+        cur_inc_found = []
+        cur_inc_found_err = []
+        if final_labels:
+            labels = self._final_labels[_dir]
+        else:
+            labels = self._labels[_dir]
+
+        xr = self._n_queries[_dir]
+        for inc_data in inc_found:
+            cur_inc_found.append(inc_data[0])
+            cur_inc_found_err.append(inc_data[1])
+
+        dy = cur_inc_found[0]
+        dx = self._n_queries[_dir][0]
+        x_norm = (len(labels)-dx)/100
+        y_norm = (np.sum(labels)-dy)/100
+
+        norm_xr = (np.array(xr)-dx)/x_norm
+        norm_yr = (np.array(cur_inc_found)-dy)/y_norm
+        norm_y_err = cur_inc_found_err/y_norm
+        return [norm_xr, norm_yr, norm_y_err]
+
+    def plot_inc_found(self, out_fp=None):
         """
         Plot the number of queries that turned out to be included
         in the final review.
@@ -458,47 +498,33 @@ class Analysis(object):
         legend_name = []
         legend_plt = []
         pool_name = "pool_proba"
+        res_dict = {}
 
         for i, _dir in enumerate(self._dirs):
-            inc_found = self.stat_test_merged(_dir, pool_name,
-                                              _inc_queried_merged)
-            cur_inc_found = []
-            cur_inc_found_err = []
-
-            xr = self._n_queries[_dir]
-            for inc_data in inc_found:
-                cur_inc_found.append(inc_data[0])
-                cur_inc_found_err.append(inc_data[1])
-
-            dy = cur_inc_found[0]
-            dx = self._n_queries[_dir][0]
-            x_norm = (len(self._labels[_dir])-dx)/100
-            y_norm = (np.sum(self._labels[_dir])-dy)/100
-
+            inc_found = self.get_inc_found(_dir, pool_name,
+                                           _inc_queried_merged)
+            final_avail = self._final_labels is not None and _dir in self._final_labels
+            if final_avail:
+                inc_found_final = self.get_inc_found(
+                    _dir, pool_name, _inc_queried_merged, final_labels=True)
+#             res_dict[_dir] = self.stat_test_merged(_dir, pool_name,
+#                                                    _inc_queried_all_merged)
             col = "C"+str(i % 10)
-            norm_xr = (np.array(xr)-dx)/x_norm
-            norm_yr = (np.array(cur_inc_found)-dy)/y_norm
-            norm_y_err = cur_inc_found_err/y_norm
 
-            myplot = plt.errorbar(norm_xr, norm_yr, norm_y_err, color=col)
+            myplot = plt.errorbar(*inc_found, color=col)
             legend_name.append(f"{_dir}")
+            if final_avail:
+                plt.errorbar(*inc_found_final, color=col, ls="--")
             legend_plt.append(myplot)
-#         print(x_norm, y_norm, dy)
-#         start_inc = cur_pool_roc[0]
-#         start_pool = (len(self._labels)-xr[0])
-#         tot_inc = np.sum(self._labels)
-#         y_random = [start_inc]
-#         for i, x in enumerate(xr[1:]):
-#             y = start_inc + (tot_inc-start_inc)*(x-xr[0])/start_pool
-#             y_random.append(y)
-#         my_plot, = plt.plot(np.array(xr)/x_norm, (np.array(y_random)-dy)/y_norm, color="black", ls="--")
-#         legend_name.append("Random")
-#         legend_plt.append(my_plot)
+
+#         print(res_dict)
+#         if out_fp is not None:
+#             with open(out_fp, "w") as f:
+#                 json.dump(res_dict, f)
+
         plt.legend(legend_plt, legend_name, loc="upper left")
-#         if normalize:
         symb = "%"
-#         else:
-#             symb = "#"
+
         plt.xlabel(f"{symb} Queries")
         plt.ylabel(f"< {symb} Inclusions queried >")
         plt.title("Average number of inclusions found")

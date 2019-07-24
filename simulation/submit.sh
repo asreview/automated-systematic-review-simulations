@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source cpu-node/bin/activate
+
 CFG_FILES=($*)
 
 if [ $# -lt 1 ]; then

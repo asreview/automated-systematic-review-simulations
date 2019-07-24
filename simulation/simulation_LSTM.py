@@ -32,6 +32,8 @@ if len(args) >= 2:
     data_name = args[1]
     if data_name == "ptsd":
         data_file = join("ptsd", "schoot-lgmm-ptsd.csv")
+    elif data_name == "ptsd_new":
+        data_file = join("ptsd", "raoulduplicates.csv")
     elif data_name == "statins":
         data_file = join("cohen", "Statins.csv")
     elif data_name == "ace":
@@ -50,7 +52,7 @@ if not isfile(data_fp):
 
 # Define file names and data sources
 param_file = "params.csv"
-batch_config_file = "parallel.ini"
+batch_config_file = "slurm_lisa.ini"
 base_embedding_file = "../../cc.en.300.bin"
 
 embedding_file = splitext(data_fp)[0]+".vec"
