@@ -12,8 +12,7 @@
 # python -m asr simulate 'pickle/schoot-lgmm-ptsd_words_20000.pkl'  --model nb --n_prior_included 10  --n_prior_excluded "10"  --n_queries 10  --n_instances 50 --log_file test/results0.log -q max_sampling
 
 
+asreview simulate ../data/ptsd/PTSD_VandeSchoot_18.csv --config_file sim_cfg/svm_test.ini --log_file test/result0.json  --verbose 2 
 
-# 1136 1940  466 4636 2708 4301 1256 1552 4048 3560 2845 2477 4145 1960
-# 2820 2035 2823 2318 1153 2973 3455  477 2043 1727 2224 3173 4173 3051
 
-asreview simulate ../data/ptsd/PTSD_VandeSchoot_18.csv --embedding ../data/ptsd/PTSD_VandeSchoot_18.vec --n_prior_included 10  --n_prior_excluded 10  --n_queries 3  --n_instances 100  --config_file sim_settings.ini --log_file test/results0.log
+# asreview simulate ../data/ptsd/PTSD_VandeSchoot_18.csv --embedding ../data/ptsd/PTSD_VandeSchoot_18.vec --config_file continue_test.ini --log_file test/results0a.json -s test/result0.json --verbose 2

@@ -2,7 +2,7 @@
 # MIT License
 
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from os import path
 from io import open
 
@@ -13,20 +13,20 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 # Extract version from cbsodata.py
-for line in open(path.join("pargrid", "__init__.py")):
+for line in open(path.join("asreviewcontrib", "simulation", "__init__.py")):
     if line.startswith('__version__'):
         exec(line)
         break
 
 setup(
-    name='pargrid',
+    name='asreview-simulation',
     version=__version__,  # noqa
-    description='Parameter grid simulation for ASR',
+    description='Simulation project for ASR',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/msdslab/automated-systematic-review-simulations',
     author='Utrecht University',
-    author_email='r.d.schram@uu.nl',
+    author_email='asreview@uu.nl',
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
@@ -42,12 +42,9 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     keywords='asr automated review batch',
-    packages=find_packages(exclude=['hpc', 'preparation', 'data', 'simulation']),
-
+    packages=find_namespace_packages(include=['asreviewcontrib.*']),
     install_requires=[
-        "pandas", "numpy", "sklearn", "keras", "matplotlib", "scipy",
-        "asreview",
-        "batchgen @ git+https://github.com/UtrechtUniversity/hpc-batch-gen",
+        "asreview-hyperopt", "mpi4py", "asreview",
     ],
 
     extras_require={
@@ -58,9 +55,15 @@ setup(
     # },
     # data_files=[('my_data', ['data/data_file'])],
 
+#     entry_points={
+#         'console_scripts': [
+#             'pickle_asr=pargrid.pickle:main'],
+#     },
+
     entry_points={
-        'console_scripts': [
-            'pickle_asr=pargrid.pickle:main'],
+        "asreview.entry_points": [
+            "batch = asreviewcontrib.simulation:BatchEntryPoint",
+        ]
     },
 
     project_urls={

@@ -1,6 +1,0 @@
-keras
-pandas
-numpy
-sklearn
--e git://github.com/msdslab/automated-systematic-review#egg=asr
--e git://github.com/UtrechtUniversity/hpc-batch-gen#egg=batchgen
