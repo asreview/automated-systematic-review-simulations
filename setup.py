@@ -50,19 +50,10 @@ setup(
     extras_require={
     },
 
-    # package_data={
-    #     'sample': ['data/package_data.dat'],
-    # },
-    # data_files=[('my_data', ['data/data_file'])],
-
-#     entry_points={
-#         'console_scripts': [
-#             'pickle_asr=pargrid.pickle:main'],
-#     },
-
     entry_points={
         "asreview.entry_points": [
             "batch = asreviewcontrib.simulation:BatchEntryPoint",
+            "error = asreviewcontrib.simulation.error: ErrorEntryPoint",
         ]
     },
 
