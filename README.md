@@ -40,9 +40,9 @@ To get some plots on how well the number of inclusions can be estimated at the m
 asreview error ${STATE_FILE} ${DATA_FILE}
 ```
 
-![Estimated inclusions](https://github.com/asreview/automated-systematic-review-simulations/master/docs/inc_estimate.png)
+![Estimated inclusions](https://raw.githubusercontent.com/asreview/automated-systematic-review-simulations/master/docs/inc_estimate.png)
 
-![Probability finished](https://github.com/asreview/automated-systematic-review-simulations/master/docs/prob_finished.png)
+![Probability finished](https://raw.githubusercontent.com/asreview/automated-systematic-review-simulations/master/docs/prob_finished.png)
 
 ## Related packages
 
