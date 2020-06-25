@@ -37,41 +37,47 @@ class ErrorEntryPoint(BaseEntryPoint):
 
         state_fp = arg_dict["state_path"]
         data_fp = arg_dict["data_path"]
+        output = arg_dict["output"]
 
         optimization_fp = arg_dict["optimization_path"]
         if optimization_fp is None:
             optimization_fp = Path("output", "optimization.json")
 
-        optimization_fp = Path(optimization_fp)
+        data_dir = Path(arg_dict["data_path"]).parent
+        cache_fp = arg_dict["cache_path"]
+        opt_results = get_opt_results(optimization_fp, data_dir, cache_fp)
+        error_data = self.error_estimate(state_fp, data_fp, opt_results)
+        if output is None:
+            self.plot_results(error_data)
+        else:
+            with open(output, "w") as f:
+                json.dump(error_data, f)
 
-        if not optimization_fp.is_file():
-            print("Optimization path does not exist yet, computing optimum.")
-            if len(optimization_fp.parent):
-                os.makedirs(optimization_fp.parent, exist_ok=True)
-            cache_fp = arg_dict["cache_path"]
-            if cache_fp is None:
-                cache_fp = Path("output", "cache.pkl")
-            if len(cache_fp.parent):
-                os.makedirs(cache_fp.parent, exist_ok=True)
-            data_dir = arg_dict["data_dir"]
-            optimize_distribution(cache_fp, optimization_fp, data_dir=data_dir)
-
-        with open(optimization_fp, "r") as f:
-            opt_results = json.load(f)
+    def error_estimate(self, state_fp, data_fp, opt_results):
 
         as_data = ASReviewData.from_file(data_fp)
-        feature_model = get_feature_model("tfidf")
-
-        X = feature_model.fit_transform(
-            as_data.texts, as_data.headings, as_data.bodies, as_data.keywords
-        )
 
         labels = as_data.labels
-        all_n = []
-        all_inclusions = []
-        all_p_found = []
+        inclusion_est = []
+        prob_finished = []
+        cur_included = []
+        perc_reviewed = []
         with open_state(state_fp) as state:
+            settings = state.settings
+            feature_model = get_feature_model(
+                settings.feature_extraction,
+                **settings.feature_param)
+
+            X = feature_model.fit_transform(
+                as_data.texts, as_data.headings, as_data.bodies,
+                as_data.keywords
+            )
             n_queries = state.n_queries()
+            model = get_model(settings.model, **settings.model_param)
+            balance_model = get_balance_model(settings.balance_strategy,
+                                              **settings.balance_param)
+
+            n_total_inclusions = len(np.where(labels == 1)[0])
             for query_i in range(n_queries):
                 try:
                     train_idx = state.get("train_idx", query_i=query_i)
@@ -80,17 +86,41 @@ class ErrorEntryPoint(BaseEntryPoint):
                     continue
                 n_inc, p_all = estimate_inclusions(
                     train_idx, pool_idx, X, labels,
-                    opt_results)
-                print(n_inc, np.sum(labels[train_idx]), np.sum(labels), p_all)
-                all_n.append(n_inc)
-                all_p_found.append(p_all)
-                all_inclusions.append(np.sum(labels[train_idx]))
-        plt.plot(all_n)
-        plt.plot(all_inclusions)
+                    opt_results, model, balance_model)
+#                 print(n_inc, np.sum(labels[train_idx]), np.sum(labels), p_all)
+                inclusion_est.append(int(n_inc))
+                prob_finished.append(p_all)
+                cur_included.append(int(np.sum(labels[train_idx])))
+                perc_reviewed.append(100*len(train_idx)/len(labels))
+
+        error_data = {
+            "inclusion_est": inclusion_est,
+            "prob_finished": prob_finished,
+            "cur_included": cur_included,
+            "perc_reviewed": perc_reviewed,
+            "n_total_inclusions": n_total_inclusions
+        }
+        return error_data
+
+    def plot_results(self, error_data):
+        perc_reviewed = error_data["perc_reviewed"]
+        inclusions_est = error_data["inclusion_est"]
+        prob_finished = error_data["prob_finished"]
+        cur_included = error_data["cur_included"]
+        n_total_inclusions = error_data["n_total_inclusions"]
+
+        plt.xlabel("% reviewed")
+        plt.ylabel("Number of inclusions")
+        plt.plot(perc_reviewed, inclusions_est, label="estimate")
+        plt.plot(perc_reviewed, cur_included, label="found")
+        plt.legend(loc="lower right")
         plt.show()
 
-        plt.plot(all_p_found)
-        plt.plot(np.array(all_inclusions)/np.sum(labels))
+        plt.xlabel("% reviewed")
+        plt.plot(perc_reviewed, prob_finished, label="Estimate @100%")
+        plt.plot(perc_reviewed, np.array(cur_included)/n_total_inclusions,
+                 label="Fraction of inclusions found")
+        plt.legend(loc="lower right")
         plt.show()
 
 
@@ -126,7 +156,31 @@ def _parse_args():
         help="Path to optimization file with optimal parameter(s) over "
         "multiple datasets."
     )
+    parser.add_argument(
+        "-o", "--output",
+        type=str,
+        default=None,
+        help="Path to storing the results of the error estimation."
+        " If not supplied, plot the results instead.")
     return parser
+
+
+def get_opt_results(optimization_fp, data_dir, cache_fp):
+    optimization_fp = Path(optimization_fp)
+
+    if not optimization_fp.is_file():
+        print("Optimization path does not exist yet, computing optimum.")
+        if len(str(optimization_fp.parent)):
+            os.makedirs(optimization_fp.parent, exist_ok=True)
+        if cache_fp is None:
+            cache_fp = Path("output", "cache.pkl")
+        if len(str(cache_fp.parent)):
+            os.makedirs(cache_fp.parent, exist_ok=True)
+        optimize_distribution(cache_fp, optimization_fp, data_dir=data_dir)
+
+    with open(optimization_fp, "r") as f:
+        opt_results = json.load(f)
+    return opt_results
 
 
 def discrete_norm_dist(dist, train_percentage, bins):
@@ -188,31 +242,44 @@ def log_likelihood(train_dist, expected_dist):
     return -likelihood
 
 
-def estimate_inclusions(train_idx, pool_idx, X, y, opt_results, plot=False):
-    model = get_model("nb")
-    balance_model = get_balance_model("double")
+def corrected_proba(X, y, model, balance_model, train_one_idx, train_zero_idx,
+                    n_sample=10):
+    cor_proba = []
+    for _ in range(n_sample):
+        if len(train_one_idx) == 1:
+            new_train_idx = np.append(train_one_idx, train_zero_idx)
+            X_train, y_train = balance_model.sample(X, y, new_train_idx, {})
+            model.fit(X_train, y_train)
+            correct_proba = model.predict_proba(X[train_one_idx])[0, 1]
+            cor_proba.append(correct_proba)
+            continue
+
+        for i_rel_train in range(len(train_one_idx)):
+            new_train_idx = np.append(np.delete(train_one_idx, i_rel_train),
+                                      train_zero_idx)
+            X_train, y_train = balance_model.sample(X, y, new_train_idx, {})
+            model.fit(X_train, y_train)
+            correct_proba = model.predict_proba(X[train_one_idx[i_rel_train]])[0, 1]
+            cor_proba.append(correct_proba)
+
+    return np.array(cor_proba)
+
+
+def estimate_inclusions(train_idx, pool_idx, X, y, opt_results, model,
+                        balance_model):
+
     X_train, y_train = balance_model.sample(X, y, train_idx, {})
 
     model.fit(X_train, y_train)
     proba = model.predict_proba(X)[:, 1]
     df_all_corrected = -np.log(1/proba-1)
 
-    train_one_idx = np.where(y[train_idx] == 1)[0]
-    train_zero_idx = np.where(y[train_idx] == 0)[0]
-    correct_one_proba = []
+    train_one_idx = train_idx[np.where(y[train_idx] == 1)[0]]
+    train_zero_idx = train_idx[np.where(y[train_idx] == 0)[0]]
 
-    for _ in range(10):
-        if len(train_one_idx) == 1:
-            correct_one_proba.append(df_all_corrected[train_idx[0]])
-            continue
-        for rel_train_idx in train_one_idx:
-            new_train_idx = np.delete(train_idx, rel_train_idx)
-            X_train, y_train = balance_model.sample(X, y, new_train_idx, {})
-            model.fit(X_train, y_train)
-            correct_proba = model.predict_proba(X[train_idx[rel_train_idx]])[0, 1]
-            correct_one_proba.append(correct_proba)
-
-    correct_one_proba = np.array(correct_one_proba)
+    correct_one_proba = corrected_proba(X, y, model, balance_model,
+                                        train_one_idx,
+                                        train_zero_idx)
 
     df_one_corrected = -np.log(1/correct_one_proba-1)
     df_train_corrected = df_all_corrected[train_idx]
@@ -264,9 +331,4 @@ def estimate_inclusions(train_idx, pool_idx, X, y, opt_results, plot=False):
 
     p_all_found = prob_all_found(
         opt_results["min_df"], df_pool, param[0], param[1])
-    if plot:
-        plt.plot((bin_edges[1:]+bin_edges[:-1])/2, est_found_dist)
-        plt.plot((bin_edges[1:]+bin_edges[:-1])/2, hist)
-        plt.plot((bin_edges[1:]+bin_edges[:-1])/2, perc_train)
-        plt.show()
     return np.sum(y[train_idx])/perc_found, p_all_found
