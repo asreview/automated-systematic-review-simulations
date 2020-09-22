@@ -1,4 +1,4 @@
-# Automated Systematic Review - Simulation study
+# Automated Systematic Review - Simulation [DEPRECATED]
 
 This project contains the code of the simulation study for the [Automated
 Systematic Review](https://github.com/asreview/automated-systematic-review)
@@ -6,6 +6,8 @@ project. It contains code to run batches of simulation runs in parallel using MP
 
 We make use of the SURFSara HPC infrastructure. But with some modifications,
 the code can be run on other HPC facilities as well.
+
+Some of the code in the repository is old an no longer maintained. Batch functionality has been (or will soon be) integrated into the core ASReview project. Other scripts will be copied to more suitable repositories.
 
 ## Installation 
 
@@ -31,23 +33,10 @@ mpirun -n 4 asreview batch ${DATA_SET} --state_file ${DIR}/results.json --n_runs
 It will create 12 files in the ${DIR} directory, while running on 4 cores in parallel.
 
 
-## Estimating the number of inclusions (retrospectively)
-
-
-To get some plots on how well the number of inclusions can be estimated at the moment:
-
-```bash
-asreview error ${STATE_FILE} ${DATA_FILE}
-```
-
-![Estimated inclusions](https://raw.githubusercontent.com/asreview/automated-systematic-review-simulations/master/docs/inc_estimate.png)
-
-![Probability finished](https://raw.githubusercontent.com/asreview/automated-systematic-review-simulations/master/docs/prob_finished.png)
-
 ## Related packages
 
 - asreview-visualization
 	Package for visualization of log files.
 
 - asreview-hyperopt
-	Package for optimizing the parameters for the 
+	Package for optimizing ASReview hyperparameters.

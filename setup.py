@@ -24,7 +24,7 @@ setup(
     description='Simulation project for ASR',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/msdslab/automated-systematic-review-simulations',
+    url='https://github.com/asreview/automated-systematic-review-simulations',
     author='Utrecht University',
     author_email='asreview@uu.nl',
     classifiers=[
@@ -53,7 +53,6 @@ setup(
     entry_points={
         "asreview.entry_points": [
             "batch = asreviewcontrib.simulation:BatchEntryPoint",
-            "error = asreviewcontrib.simulation.error: ErrorEntryPoint",
         ]
     },
 
